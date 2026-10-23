@@ -39,7 +39,7 @@ climbs, Jiggle-X correctly never nudges.
 - [ ] **5. App Nap:** in working hours, Activity Monitor › CPU › "App Nap" column
       shows **No** for Jiggle-X (it shows Yes outside hours / while paused — fine).
 
-If 1 or 2 fail, stop: the sandbox-only approach needs rethinking.
+If 1 or 2 fail, check the log first: idle not dropping after an "ok" nudge means the synthetic events are not counting as input.
 
 ## UI
 
