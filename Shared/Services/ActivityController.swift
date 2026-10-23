@@ -1,5 +1,4 @@
 import AppKit
-import os.log
 
 /// The run-state machine. Each tick re-derives the state from the schedule, the
 /// pause state and the clock, then declares activity if the user has gone idle
@@ -18,18 +17,19 @@ final class ActivityController {
     private let nudger: ActivityNudger
     private let clock: NowProvider
     private let napPreventer: NapPreventer
+    private let eventLog: EventLog
     private let calendar: Calendar
     private var timer: Timer?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
-    private let logger = Logger(subsystem: Constants.bundleIdentifier, category: "Activity")
 
     init(persistence: PersistenceManager, idleMonitor: IdleMonitor, nudger: ActivityNudger,
-         clock: NowProvider, napPreventer: NapPreventer, calendar: Calendar = .autoupdatingCurrent) {
+         clock: NowProvider, napPreventer: NapPreventer, eventLog: EventLog, calendar: Calendar = .autoupdatingCurrent) {
         self.persistence = persistence
         self.idleMonitor = idleMonitor
         self.nudger = nudger
         self.clock = clock
         self.napPreventer = napPreventer
+        self.eventLog = eventLog
         self.calendar = calendar
     }
 
@@ -55,7 +55,7 @@ final class ActivityController {
         if state == .active { nudger.release() }
         if newState == .active { napPreventer.begin() } else { napPreventer.end() }
         state = newState
-        logger.info("State → \(String(describing: newState), privacy: .public)")
+        eventLog.log("State → \(newState)", category: "Activity")
         onStateChange?(newState)
     }
 
@@ -63,10 +63,12 @@ final class ActivityController {
         refresh()
         guard state == .active else { return }
         let idle = idleMonitor.secondsSinceLastInput()
-        if idle >= persistence.schedule.idleThreshold {
-            let ok = nudger.declareActivity()
-            logger.info("Idle \(Int(idle), privacy: .public)s → declared activity (ok: \(ok, privacy: .public))")
+        let threshold = persistence.schedule.idleThreshold
+        var message = "Tick: idle \(Int(idle))s (threshold \(Int(threshold))s)"
+        if idle >= threshold {
+            message += " → declared activity: \(nudger.declareActivity() ? "ok" : "FAILED")"
         }
+        eventLog.log(message, category: "Activity")
     }
 
     func pause() {

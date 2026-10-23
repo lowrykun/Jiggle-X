@@ -19,6 +19,11 @@ final class FakeNapPreventer: NapPreventer {
     func end() { isHeld = false }
 }
 
+final class FakeEventLog: EventLog {
+    private(set) var lines: [String] = []
+    func log(_ message: String, category: String) { lines.append("[\(category)] \(message)") }
+}
+
 final class FakeClock: NowProvider {
     var current: Date
     init(_ current: Date) { self.current = current }
@@ -33,6 +38,7 @@ final class ActivityControllerTests: XCTestCase {
     private var nudger: FakeNudger!
     private var clock: FakeClock!
     private var napPreventer: FakeNapPreventer!
+    private var eventLog: FakeEventLog!
 
     override func setUp() async throws {
         defaults = UserDefaults(suiteName: UUID().uuidString)!
@@ -41,11 +47,13 @@ final class ActivityControllerTests: XCTestCase {
         nudger = FakeNudger()
         clock = FakeClock(date(2026, 10, 21, 10)) // Wednesday 10:00
         napPreventer = FakeNapPreventer()
+        eventLog = FakeEventLog()
     }
 
     private func makeController() -> ActivityController {
         let controller = ActivityController(persistence: persistence, idleMonitor: idle, nudger: nudger,
-                                            clock: clock, napPreventer: napPreventer, calendar: newYorkCalendar)
+                                            clock: clock, napPreventer: napPreventer, eventLog: eventLog,
+                                            calendar: newYorkCalendar)
         controller.refresh()
         return controller
     }
@@ -180,5 +188,30 @@ final class ActivityControllerTests: XCTestCase {
         clock.current = date(2026, 10, 21, 19)
         controller.tick()
         XCTAssertFalse(napPreventer.isHeld)
+    }
+
+    func testLogsStateChanges() {
+        let controller = makeController()
+        controller.pause()
+        XCTAssertEqual(eventLog.lines, ["[Activity] State → active", "[Activity] State → paused"])
+    }
+
+    func testLogsIdleAndNudgeOnEachActiveTick() {
+        let controller = makeController()
+        idle.idle = 30
+        controller.tick()
+        idle.idle = 125
+        controller.tick()
+        XCTAssertEqual(Array(eventLog.lines.suffix(2)), [
+            "[Activity] Tick: idle 30s (threshold 120s)",
+            "[Activity] Tick: idle 125s (threshold 120s) → declared activity: ok",
+        ])
+    }
+
+    func testDoesNotLogTicksOutsideHours() {
+        clock.current = date(2026, 10, 21, 19)
+        let controller = makeController()
+        controller.tick()
+        XCTAssertTrue(eventLog.lines.isEmpty)
     }
 }
