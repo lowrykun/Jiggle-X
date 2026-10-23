@@ -6,7 +6,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         persistence: .shared,
         idleMonitor: SystemIdleMonitor(),
         nudger: PowerAssertionNudger(),
-        clock: SystemNowProvider()
+        clock: SystemNowProvider(),
+        napPreventer: SystemNapPreventer()
     )
     private lazy var menuBarManager = MenuBarManager(controller: controller)
 

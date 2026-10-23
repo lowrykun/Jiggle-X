@@ -13,6 +13,13 @@ protocol ActivityNudger {
     func release()
 }
 
+/// Keeps macOS from App Napping the process, which would stretch the tick timer
+/// far past Teams' Away timeout.
+protocol NapPreventer {
+    func begin()
+    func end()
+}
+
 protocol NowProvider {
     func now() -> Date
 }
@@ -28,18 +35,47 @@ struct SystemIdleMonitor: IdleMonitor {
 /// (which is what Teams watches), keeps the display on, and wakes it if asleep —
 /// without moving the cursor or needing the Accessibility permission.
 final class PowerAssertionNudger: ActivityNudger {
+    typealias Declare = (inout IOPMAssertionID) -> IOReturn
+
     private var assertionID: IOPMAssertionID = IOPMAssertionID(kIOPMNullAssertionID)
+    private let declare: Declare
+
+    init(declare: @escaping Declare = { id in
+        IOPMAssertionDeclareUserActivity("Jiggle-X: working hours" as CFString, kIOPMUserActiveLocal, &id)
+    }) {
+        self.declare = declare
+    }
 
     @discardableResult
     func declareActivity() -> Bool {
-        let result = IOPMAssertionDeclareUserActivity("Jiggle-X: working hours" as CFString, kIOPMUserActiveLocal, &assertionID)
-        return result == kIOReturnSuccess
+        if declare(&assertionID) == kIOReturnSuccess { return true }
+        // The reused ID may have gone stale (e.g. powerd restarted); start a fresh assertion.
+        assertionID = IOPMAssertionID(kIOPMNullAssertionID)
+        return declare(&assertionID) == kIOReturnSuccess
     }
 
     func release() {
         guard assertionID != IOPMAssertionID(kIOPMNullAssertionID) else { return }
         IOPMAssertionRelease(assertionID)
         assertionID = IOPMAssertionID(kIOPMNullAssertionID)
+    }
+}
+
+final class SystemNapPreventer: NapPreventer {
+    private var activity: NSObjectProtocol?
+
+    func begin() {
+        guard activity == nil else { return }
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            reason: "Keeping you available during working hours"
+        )
+    }
+
+    func end() {
+        guard let activity else { return }
+        ProcessInfo.processInfo.endActivity(activity)
+        self.activity = nil
     }
 }
 

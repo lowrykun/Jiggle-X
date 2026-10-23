@@ -30,6 +30,8 @@ climbs, Jiggle-X correctly never nudges.
 - [ ] **3. Locked (nice-to-have):** Ctrl-Cmd-Q, walk away 10 min. Teams status: ____.
       If Away, note "don't lock during working hours" in AboutView.
 - [ ] **4. Sandbox:** no permission prompts appeared at any point.
+- [ ] **5. App Nap:** in working hours, Activity Monitor › CPU › "App Nap" column
+      shows **No** for Jiggle-X (it shows Yes outside hours / while paused — fine).
 
 If 1 or 2 fail, stop: the sandbox-only approach needs rethinking.
 

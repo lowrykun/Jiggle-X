@@ -17,17 +17,19 @@ final class ActivityController {
     private let idleMonitor: IdleMonitor
     private let nudger: ActivityNudger
     private let clock: NowProvider
+    private let napPreventer: NapPreventer
     private let calendar: Calendar
     private var timer: Timer?
     private var observers: [(NotificationCenter, NSObjectProtocol)] = []
     private let logger = Logger(subsystem: Constants.bundleIdentifier, category: "Activity")
 
     init(persistence: PersistenceManager, idleMonitor: IdleMonitor, nudger: ActivityNudger,
-         clock: NowProvider, calendar: Calendar = .autoupdatingCurrent) {
+         clock: NowProvider, napPreventer: NapPreventer, calendar: Calendar = .autoupdatingCurrent) {
         self.persistence = persistence
         self.idleMonitor = idleMonitor
         self.nudger = nudger
         self.clock = clock
+        self.napPreventer = napPreventer
         self.calendar = calendar
     }
 
@@ -51,6 +53,7 @@ final class ActivityController {
 
         guard newState != state else { return }
         if state == .active { nudger.release() }
+        if newState == .active { napPreventer.begin() } else { napPreventer.end() }
         state = newState
         logger.info("State → \(String(describing: newState), privacy: .public)")
         onStateChange?(newState)
@@ -111,5 +114,6 @@ final class ActivityController {
         observers.forEach { center, token in center.removeObserver(token) }
         observers = []
         nudger.release()
+        napPreventer.end()
     }
 }

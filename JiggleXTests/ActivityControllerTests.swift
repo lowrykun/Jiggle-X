@@ -13,6 +13,12 @@ final class FakeNudger: ActivityNudger {
     func release() { releases += 1 }
 }
 
+final class FakeNapPreventer: NapPreventer {
+    private(set) var isHeld = false
+    func begin() { isHeld = true }
+    func end() { isHeld = false }
+}
+
 final class FakeClock: NowProvider {
     var current: Date
     init(_ current: Date) { self.current = current }
@@ -26,6 +32,7 @@ final class ActivityControllerTests: XCTestCase {
     private var idle: FakeIdleMonitor!
     private var nudger: FakeNudger!
     private var clock: FakeClock!
+    private var napPreventer: FakeNapPreventer!
 
     override func setUp() async throws {
         defaults = UserDefaults(suiteName: UUID().uuidString)!
@@ -33,11 +40,12 @@ final class ActivityControllerTests: XCTestCase {
         idle = FakeIdleMonitor()
         nudger = FakeNudger()
         clock = FakeClock(date(2026, 10, 21, 10)) // Wednesday 10:00
+        napPreventer = FakeNapPreventer()
     }
 
     private func makeController() -> ActivityController {
         let controller = ActivityController(persistence: persistence, idleMonitor: idle, nudger: nudger,
-                                            clock: clock, calendar: newYorkCalendar)
+                                            clock: clock, napPreventer: napPreventer, calendar: newYorkCalendar)
         controller.refresh()
         return controller
     }
@@ -160,5 +168,17 @@ final class ActivityControllerTests: XCTestCase {
         persistence.schedule = s
         controller.refresh()
         XCTAssertEqual(controller.state, .outsideHours)
+    }
+
+    func testHoldsNapPreventionOnlyWhileActive() {
+        let controller = makeController()
+        XCTAssertTrue(napPreventer.isHeld)
+        controller.pause()
+        XCTAssertFalse(napPreventer.isHeld)
+        controller.resume()
+        XCTAssertTrue(napPreventer.isHeld)
+        clock.current = date(2026, 10, 21, 19)
+        controller.tick()
+        XCTAssertFalse(napPreventer.isHeld)
     }
 }
