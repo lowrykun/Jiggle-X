@@ -104,10 +104,46 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
     @objc private func quit() { NSApp.terminate(nil) }
 
     @objc func openSettings() {
-        // Filled in with SettingsView (Task 6).
+        let controller = self.controller
+        settingsWindow = present(settingsWindow, title: String(localized: "Jiggle-X Settings")) {
+            SettingsView(onScheduleChange: { controller.refresh() })
+        }
     }
 
     @objc func openAbout() {
-        // Filled in with AboutView (Task 6).
+        aboutWindow = present(aboutWindow, title: String(localized: "About Jiggle-X")) {
+            AboutView()
+        }
+    }
+
+    // MARK: - Windows
+
+    /// Bring an existing window forward, or create one hosting `content`.
+    private func present<Content: View>(_ existing: NSWindow?, title: String,
+                                        content: () -> Content) -> NSWindow {
+        let window = existing ?? {
+            let window = NSWindow(contentViewController: NSHostingController(rootView: content()))
+            window.title = title
+            window.styleMask = [.titled, .closable]
+            window.isReleasedWhenClosed = false
+            window.delegate = self
+            // Agent apps have no Dock icon to bring windows forward, so always
+            // open on the Space the user is looking at.
+            window.collectionBehavior.insert(.moveToActiveSpace)
+            window.center()
+            return window
+        }()
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        // Activation can be refused (e.g. at launch while another app is frontmost);
+        // still show the window rather than leaving it ordered out.
+        window.orderFrontRegardless()
+        return window
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        // Drop closed windows so Settings re-reads persisted state next time.
+        if notification.object as? NSWindow === settingsWindow { settingsWindow = nil }
+        if notification.object as? NSWindow === aboutWindow { aboutWindow = nil }
     }
 }
