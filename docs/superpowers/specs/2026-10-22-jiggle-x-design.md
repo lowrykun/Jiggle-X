@@ -40,7 +40,20 @@ Mac App Store** (sandboxed, no privileged permissions, App Store-friendly defaul
 - Keeps the Mac awake outside the configured schedule, or when paused.
 - Silently wrong state: icon says active but the user goes Away (or vice versa).
 
-## 5. Core mechanism (decided)
+## 5. Core mechanism
+
+> **Amended 2026-10-23 — the sandbox-only mechanism below failed in real use.**
+> `IOPMAssertionDeclareUserActivity` keeps the display awake but does **not** reset
+> the HID idle time (`CGEventSource` / `HIDIdleTime`) that Teams reads — measured: idle
+> 8.3 s → 8.8 s across a successful call, and the owner showed Away. Owner decision:
+> Jiggle-X is a personal project; **drop the App Sandbox / App Store goal**. The nudge is
+> now a real input event: move the cursor 1 px and back via `CGEvent` posted at the HID
+> tap (needs the **Accessibility** permission, requested at launch; status menu shows a
+> warning item while missing), plus the existing declare-activity call to wake the
+> display. Distribution: Developer ID (outside the App Store). §2's "sandbox-compatible"
+> goal and §4's Accessibility anti-goal are withdrawn. Original text kept below for history.
+
+### 5.0 Original mechanism (superseded)
 
 **No real cursor movement.** Posting synthetic mouse events (`CGEvent`) needs the
 Accessibility permission, which sandboxed apps can't obtain. Instead Jiggle-X tells

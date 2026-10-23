@@ -5,7 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let controller = ActivityController(
         persistence: .shared,
         idleMonitor: SystemIdleMonitor(),
-        nudger: PowerAssertionNudger(),
+        nudger: MouseJiggleNudger(poster: SystemEventPoster(), displayWaker: PowerAssertionNudger()),
         clock: SystemNowProvider(),
         napPreventer: SystemNapPreventer(),
         eventLog: AppLog.shared
@@ -19,6 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         AppLog.shared.log("Jiggle-X \(version) launched; schedule: \(PersistenceManager.shared.schedule.summary())", category: "App")
+        if AccessibilityPermission.isGranted {
+            AppLog.shared.log("Accessibility permission: granted", category: "App")
+        } else {
+            AppLog.shared.log("Accessibility permission: NOT granted — can't move the mouse; requesting", category: "App")
+            AccessibilityPermission.request()
+        }
         menuBarManager.setup()
         controller.onStateChange = { [weak self] state in
             self?.menuBarManager.updateIcon(for: state)

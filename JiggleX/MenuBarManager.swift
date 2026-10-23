@@ -58,6 +58,10 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
     private func makeStatusMenu() -> NSMenu {
         controller.refresh()
         let menu = NSMenu()
+        if let warning = MenuContent.permissionWarning(hasAccess: AccessibilityPermission.isGranted) {
+            menu.addItem(item(warning, #selector(openAccessibilitySettings)))
+            menu.addItem(.separator())
+        }
         menu.addItem(disabledItem(MenuContent.statusTitle(controller.state)))
         menu.addItem(disabledItem(PersistenceManager.shared.schedule.summary()))
         menu.addItem(.separator())
@@ -102,6 +106,7 @@ final class MenuBarManager: NSObject, NSWindowDelegate {
     @objc private func pauseUntilTomorrow() { controller.pauseUntilTomorrow() }
     @objc private func resume() { controller.resume() }
     @objc private func quit() { NSApp.terminate(nil) }
+    @objc private func openAccessibilitySettings() { AccessibilityPermission.openSettings() }
 
     @objc func openSettings() {
         let controller = self.controller

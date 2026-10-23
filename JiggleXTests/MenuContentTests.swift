@@ -19,3 +19,11 @@ final class MenuContentTests: XCTestCase {
         XCTAssertEqual(MenuContent.actions(for: .outsideHours), [.pause])
     }
 }
+
+final class MenuPermissionTests: XCTestCase {
+    func testPermissionWarningOnlyWhenMissing() {
+        XCTAssertEqual(MenuContent.permissionWarning(hasAccess: false),
+                       "⚠︎ Needs Accessibility permission — Open Settings…")
+        XCTAssertNil(MenuContent.permissionWarning(hasAccess: true))
+    }
+}

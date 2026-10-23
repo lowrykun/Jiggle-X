@@ -1,7 +1,11 @@
 # Jiggle-X v1 — Manual QA
 
 Run the app: `open build/Build/Products/Debug/Jiggle-X.app`
-Watch logs: `log stream --info --predicate 'subsystem == "com.jasonlowry.JiggleX"'`
+Watch logs: right-click › View Log…, or
+`tail -f ~/Library/Application\ Support/Jiggle-X/Logs/Jiggle-X.log`
+
+**First:** grant Accessibility (System Settings › Privacy & Security › Accessibility ›
+Jiggle-X on). Launch logs `Accessibility permission: granted`; the status menu has no ⚠︎ item.
 
 To test outside your real hours, temporarily set an all-day schedule with a 30 s
 threshold (quit the app first), then restore defaults afterwards:
@@ -24,12 +28,14 @@ climbs, Jiggle-X correctly never nudges.
 
 - [ ] **1. Idle, display on:** in working hours, leave the Mac untouched 10 min.
       Teams stays **Available** (check from your phone). Log shows
-      `declared activity (ok: true)`.
+      `→ declared activity: ok`, and the **next** tick's idle is back near 0
+      (proves the jiggle reset the idle time Teams reads).
 - [ ] **2. Display asleep:** let the display sleep (or `pmset displaysleepnow`), wait.
       The next nudge wakes it; Teams stays Available.
 - [ ] **3. Locked (nice-to-have):** Ctrl-Cmd-Q, walk away 10 min. Teams status: ____.
       If Away, note "don't lock during working hours" in AboutView.
-- [ ] **4. Sandbox:** no permission prompts appeared at any point.
+- [ ] **4. Permission:** with Accessibility off, ticks log `FAILED` and the status menu
+      shows the ⚠︎ item, which opens the Accessibility settings pane.
 - [ ] **5. App Nap:** in working hours, Activity Monitor › CPU › "App Nap" column
       shows **No** for Jiggle-X (it shows Yes outside hours / while paused — fine).
 

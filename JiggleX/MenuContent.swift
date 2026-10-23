@@ -22,6 +22,11 @@ enum MenuContent {
         }
     }
 
+    /// Shown at the top of the status menu while Jiggle-X can't move the mouse.
+    static func permissionWarning(hasAccess: Bool) -> String? {
+        hasAccess ? nil : String(localized: "⚠︎ Needs Accessibility permission — Open Settings…")
+    }
+
     static func actions(for state: RunState) -> [MenuAction] {
         switch state {
         case .active: return [.pause, .pauseUntilTomorrow]
