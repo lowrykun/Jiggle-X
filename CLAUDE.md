@@ -59,8 +59,12 @@ don't trigger. Outside hours or while paused, no new nudges are made.
 
 `AppLog` writes `~/Library/Application Support/Jiggle-X/Logs/Jiggle-X.log` (rotated at
 1 MB to `Jiggle-X.1.log`) and mirrors to the unified log at `.notice`. It records
-launch, Accessibility status, state changes and every active tick (idle seconds,
-threshold, nudge result). Right-click › **View Log…** opens a live viewer.
+launch, Accessibility status, state changes and every jiggle (idle seconds,
+threshold, nudge result); ticks where the user wasn't idle aren't logged. Right-click ›
+**View Log…** opens a live viewer that appends lines as `AppLog` posts `didAppend` —
+it never polls the file, so leaving it open costs nothing.
+
+The 15 s tick timer has 5 s tolerance so macOS can coalesce its wakeups.
 
 ## Architecture
 

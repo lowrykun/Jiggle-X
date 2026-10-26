@@ -67,7 +67,7 @@ final class SystemNapPreventer: NapPreventer {
     func begin() {
         guard activity == nil else { return }
         activity = ProcessInfo.processInfo.beginActivity(
-            options: [.userInitiatedAllowingIdleSystemSleep, .latencyCritical],
+            options: .userInitiatedAllowingIdleSystemSleep,
             reason: "Keeping you available during working hours"
         )
     }

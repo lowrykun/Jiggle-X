@@ -196,14 +196,14 @@ final class ActivityControllerTests: XCTestCase {
         XCTAssertEqual(eventLog.lines, ["[Activity] State → active", "[Activity] State → paused"])
     }
 
-    func testLogsIdleAndNudgeOnEachActiveTick() {
+    func testLogsOnlyTicksThatDeclareActivity() {
         let controller = makeController()
         idle.idle = 30
         controller.tick()
         idle.idle = 125
         controller.tick()
-        XCTAssertEqual(Array(eventLog.lines.suffix(2)), [
-            "[Activity] Tick: idle 30s (threshold 120s)",
+        XCTAssertEqual(eventLog.lines, [
+            "[Activity] State → active",
             "[Activity] Tick: idle 125s (threshold 120s) → declared activity: ok",
         ])
     }

@@ -10,6 +10,11 @@ protocol EventLog {
 /// the unified log at `.notice` so it also persists in Console.app. Rotates to a
 /// single `Jiggle-X.1.log` once the file would exceed `maxBytes`.
 final class AppLog: EventLog {
+    /// Posted (object: the log) after each line is written, so viewers can append
+    /// it instead of re-reading the file. `userInfo[lineKey]` is the line written.
+    static let didAppend = Notification.Name("\(Constants.bundleIdentifier).AppLog.didAppend")
+    static let lineKey = "line"
+
     static let shared = AppLog(
         directory: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Jiggle-X/Logs", isDirectory: true)
@@ -39,6 +44,22 @@ final class AppLog: EventLog {
             .notice("\(message, privacy: .public)")
         let line = "\(formatter.string(from: clock.now())) [\(category)] \(message)\n"
         queue.sync { append(Data(line.utf8)) }
+        NotificationCenter.default.post(name: Self.didAppend, object: self, userInfo: [Self.lineKey: line])
+    }
+
+    /// The last `maxLines` newline-terminated lines of `text`.
+    static func tail(of text: String, maxLines: Int) -> String {
+        var newlines = 0
+        var index = text.endIndex
+        while index > text.startIndex {
+            let previous = text.index(before: index)
+            if text[previous] == "\n", previous != text.index(before: text.endIndex) {
+                newlines += 1
+                if newlines == maxLines { return String(text[index...]) }
+            }
+            index = previous
+        }
+        return text
     }
 
     func read() -> String {

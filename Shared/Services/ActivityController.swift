@@ -64,11 +64,11 @@ final class ActivityController {
         guard state == .active else { return }
         let idle = idleMonitor.secondsSinceLastInput()
         let threshold = persistence.schedule.idleThreshold
-        var message = "Tick: idle \(Int(idle))s (threshold \(Int(threshold))s)"
-        if idle >= threshold {
-            message += " → declared activity: \(nudger.declareActivity() ? "ok" : "FAILED")"
-        }
-        eventLog.log(message, category: "Activity")
+        // Only jiggles are logged: a line every 15s while the user is working is noise.
+        guard idle >= threshold else { return }
+        let result = nudger.declareActivity() ? "ok" : "FAILED"
+        eventLog.log("Tick: idle \(Int(idle))s (threshold \(Int(threshold))s) → declared activity: \(result)",
+                     category: "Activity")
     }
 
     func pause() {
@@ -91,9 +91,14 @@ final class ActivityController {
     }
 
     func start() {
-        timer = Timer.scheduledTimer(withTimeInterval: Self.tickInterval, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: Self.tickInterval, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
+        // Let macOS batch this wakeup with others; a few seconds' slack doesn't matter.
+        timer.tolerance = Self.tickInterval / 3
+        // .common keeps ticking while a menu is open (event-tracking mode).
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
         let workspace = NSWorkspace.shared.notificationCenter
         let center = NotificationCenter.default
         let triggers: [(NotificationCenter, Notification.Name)] = [

@@ -49,6 +49,23 @@ final class AppLogTests: XCTestCase {
         XCTAssertEqual(log.read(), "")
     }
 
+    func testPostsDidAppendWithLine() {
+        let log = makeLog()
+        let posted = expectation(forNotification: AppLog.didAppend, object: log) { note in
+            note.userInfo?[AppLog.lineKey] as? String == "2026-10-23 09:05:00 [A] hello\n"
+        }
+        log.log("hello", category: "A")
+        wait(for: [posted], timeout: 1)
+    }
+
+    func testTailKeepsLastLines() {
+        XCTAssertEqual(AppLog.tail(of: "a\nb\nc\nd\n", maxLines: 2), "c\nd\n")
+    }
+
+    func testTailOfShortTextIsUnchanged() {
+        XCTAssertEqual(AppLog.tail(of: "a\nb\n", maxLines: 5), "a\nb\n")
+    }
+
     func testReadWithNoFileIsEmpty() {
         XCTAssertEqual(makeLog().read(), "")
     }
