@@ -22,6 +22,10 @@ struct AboutView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
+            Text("Inspired by [Jiggler](https://www.sticksoftware.com/software/Jiggler.html) from Stick Software.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
         }
         .padding(24)
         .frame(width: 380)

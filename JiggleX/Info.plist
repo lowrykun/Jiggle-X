@@ -27,6 +27,6 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Jason Lowry. All rights reserved.</string>
+	<string>Copyright © 2026 Jason Lowry. MIT License.</string>
 </dict>
 </plist>
