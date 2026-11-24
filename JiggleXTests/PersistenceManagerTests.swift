@@ -64,3 +64,21 @@ final class PersistenceManagerTests: XCTestCase {
         XCTAssertEqual(persistence.schedule.idleThreshold, 240)
     }
 }
+
+final class BreakSettingsPersistenceTests: XCTestCase {
+    func testDefaultsAndRoundTrip() {
+        let defaults = UserDefaults(suiteName: UUID().uuidString)!
+        let persistence = PersistenceManager(defaults: defaults)
+        XCTAssertEqual(persistence.breakSettings, .default)
+        XCTAssertFalse(persistence.breakSettings.isEnabled)
+        let s = BreakSettings(isEnabled: true, afterMinutes: 20, maxBreakMinutes: 7)
+        persistence.breakSettings = s
+        XCTAssertEqual(PersistenceManager(defaults: defaults).breakSettings, s)
+    }
+
+    func testClampedOnRead() {
+        let persistence = PersistenceManager(defaults: UserDefaults(suiteName: UUID().uuidString)!)
+        persistence.breakSettings = BreakSettings(isEnabled: true, afterMinutes: 1, maxBreakMinutes: 999)
+        XCTAssertEqual(persistence.breakSettings, BreakSettings(isEnabled: true, afterMinutes: 5, maxBreakMinutes: 60))
+    }
+}

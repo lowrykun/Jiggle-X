@@ -25,6 +25,10 @@ it, the menu shows a warning item that opens that settings pane.
   straight back. Teams sees that as real input.
 - **Left-click** the menu bar icon to see the status and Pause, Pause Until Tomorrow,
   or Resume. **Right-click** for Settings, View Log, About and Quit.
+- Optional **random breaks**: after Jiggle-X has kept you Available for a while with no
+  input from you (default 15 min), it stops jiggling for a random 1–15 minutes so Teams
+  shows you Away now and then, like a real person stepping away. Touching the mouse or
+  keyboard ends a break. Off by default; set it up in Settings › Random Breaks.
 - Optional Launch at Login.
 
 Why real mouse events? macOS's `IOPMAssertionDeclareUserActivity` wakes the display,

@@ -28,6 +28,11 @@ final class PersistenceManager {
         set { encode(newValue, forKey: Constants.Keys.pauseState) }
     }
 
+    var breakSettings: BreakSettings {
+        get { (decode(BreakSettings.self, forKey: Constants.Keys.breakSettings) ?? .default).clamped }
+        set { encode(newValue, forKey: Constants.Keys.breakSettings) }
+    }
+
     var hasLaunchedBefore: Bool {
         get { defaults.bool(forKey: Constants.Keys.hasLaunchedBefore) }
         set { defaults.set(newValue, forKey: Constants.Keys.hasLaunchedBefore) }

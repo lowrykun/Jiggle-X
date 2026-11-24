@@ -7,6 +7,7 @@ enum Constants {
     enum Keys {
         static let schedule = "schedule"
         static let pauseState = "pauseState"
+        static let breakSettings = "breakSettings"
         static let hasLaunchedBefore = "hasLaunchedBefore"
     }
 }

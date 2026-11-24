@@ -7,6 +7,7 @@ struct SettingsView: View {
     var onScheduleChange: () -> Void
 
     @State private var schedule = PersistenceManager.shared.schedule
+    @State private var breaks = PersistenceManager.shared.breakSettings
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var launchAtLoginError: String?
 
@@ -42,6 +43,21 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Random Breaks") {
+                Toggle("Take random offline breaks", isOn: $breaks.isEnabled)
+                Stepper(value: $breaks.afterMinutes, in: BreakSettings.afterMinutesRange, step: 5) {
+                    Text("After \(breaks.afterMinutes) min without real input")
+                }
+                .disabled(!breaks.isEnabled)
+                Stepper(value: $breaks.maxBreakMinutes, in: BreakSettings.maxBreakMinutesRange) {
+                    Text("Stop jiggling for 1–\(breaks.maxBreakMinutes) min (random)")
+                }
+                .disabled(!breaks.isEnabled)
+                Text("While you're away, Jiggle-X occasionally lets Teams show you Away for a bit. Touching the mouse or keyboard ends a break.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Advanced") {
                 Stepper(value: $schedule.idleThreshold, in: Schedule.idleThresholdRange, step: 30) {
                     Text("Keep active after \(idleThresholdText) idle")
@@ -58,6 +74,9 @@ struct SettingsView: View {
             guard newValue.isValid else { return }
             PersistenceManager.shared.schedule = newValue
             onScheduleChange()
+        }
+        .onChange(of: breaks) { newValue in
+            PersistenceManager.shared.breakSettings = newValue
         }
         .onChange(of: launchAtLogin) { newValue in
             guard newValue != LaunchAtLogin.isEnabled else { return }

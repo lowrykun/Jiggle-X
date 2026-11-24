@@ -52,6 +52,13 @@ a warning item that opens System Settings, and ticks log `declared activity: FAI
 Rebuilding with the same Apple Development / Developer ID team keeps the grant; if it
 stops working after a rebuild, remove and re-add Jiggle-X in Accessibility settings.
 
+**Random breaks** (Settings › Random Breaks, off by default): once Jiggle-X has
+jiggled for `afterMinutes` (default 15) with no real input, it stops jiggling for a
+random 1…`maxBreakMinutes` (default 15) minutes so Teams shows Away. Real input ends
+a break early. Because jiggles reset HID idle, the controller tells the user's input
+from its own by remembering `lastJiggleAt`: any input more than 2 s after it is real.
+Logged as `Break: …` / `Break ended (…)`.
+
 Consequence: during working hours the screensaver, display sleep and idle auto-lock
 don't trigger. Outside hours or while paused, no new nudges are made.
 
@@ -77,7 +84,7 @@ JiggleX/                         # App target (module JiggleX, product "Jiggle-X
 └── Views/ SettingsView.swift, AboutView.swift, LogView.swift
 Shared/
 ├── Constants.swift              # bundle id, UserDefaults keys
-├── Models/ Schedule.swift (Weekday, TimeOfDay, summary), PauseState.swift, RunState.swift
+├── Models/ Schedule.swift (Weekday, TimeOfDay, summary), BreakSettings.swift, PauseState.swift, RunState.swift
 └── Services/
     ├── ScheduleEvaluator.swift  # pure: isInWindow, nextWindowStart
     ├── ActivityController.swift # state machine, 15 s tick, wake/clock/timezone observers
